@@ -26,6 +26,11 @@ class main():
             sys.exit()   
         else:
             self.choice_device(check_devices)
+        
+        self.rel = {
+            "title": f"Relatório do Dispositivo {self.get_device()}",
+        }
+        self.get_info_android()
             
     def verify_system_host(self):
         so, hostname, release, version, arquitect = os.uname()
@@ -94,6 +99,32 @@ class main():
             sys.exit()
 
     def get_info_android(self):
+        aux = ""
+        aux_fast = {                                
+            "Marca": "ro.product.manufacturer",
+            "Modelo": "ro.product.model",
+            "Serial Number": "ro.serialno",            
+            "Versão do Android": "ro.build.version.release",
+            "Versão do SDK": "ro.build.version.sdk",
+            "Interface de rede": "wifi.interface",
+            "Status Interface de rede": "wlan.driver.status",
+        }
+        info_fast, info_full = self.execute_cmd(5)        
+        info_fast = info_fast.replace("[","").replace("]","").strip(" ").split("\n")
+        info_fast = [i for i in  info_fast if i != '']        
+        info_fast = {j.split(":")[0]: j.split(":")[1] for j in info_fast}        
+        for key,value in aux_fast.items():            
+            aux += f"{key} - {info_fast[value].upper()}\n" 
+        self.rel["info_fast"] = aux
+        print("\n\n")
+        print(self.rel["title"])
+        print(self.rel["info_fast"])
+        #print("Valor de info: ",info_full)
+        #self.rel["info_fast"]
+        #self.rel["info_full"]
+
+
+    def logical_backup(self):
         pass
 
     def create_relatory(self):
@@ -129,6 +160,26 @@ class main():
         
         elif options == 4:
             return run(["adb","kill-server"])
+        
+        elif options == 5:
+            fast = ""
+            full = ""
+            fast = run(["adb","-s",f"{self.get_device()}","shell","getprop"])
+            aux_full = {
+                "Processos": "ps",
+                "Soquets": "netstat",
+                #"Estados do dispositivo": "dumpsys", esta gerando erro
+                "Processador": "cat /proc/cpuinfo",
+                "Memoria": "cat /proc/meminfo",
+                "Pacotes instalados": "pm list packages",
+                "Processador": "cat /proc/cpuinfo",
+                "Informações da rede": "ip addr show wlan0",
+                "Rotas": "route",  
+                "IMEI": "service call iphonesubinfo 1",
+            }
+            #for key,value in aux_full.items():
+            #    full += run(["adb","-s",f"{self.get_device()}","shell",value])            
+            return fast,full
             
 
 droid = main()
