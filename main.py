@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 from subprocess import Popen, PIPE
 import sys
-import psutil
+#import psutil
 import time
 
 class main():
@@ -109,12 +109,13 @@ class main():
             "Interface de rede": "wifi.interface",
             "Status Interface de rede": "wlan.driver.status",
         }
-        info_fast, info_full = self.execute_cmd(5)        
+        info_fast, info_full = self.execute_cmd(5)                 
         info_fast = info_fast.replace("[","").replace("]","").strip(" ").split("\n")
-        info_fast = [i for i in  info_fast if i != '']        
-        info_fast = {j.split(":")[0]: j.split(":")[1] for j in info_fast}        
-        for key,value in aux_fast.items():            
-            aux += f"{key} - {info_fast[value].upper()}\n" 
+        info_fast = [i for i in  info_fast if i != '']                                
+        fast = dict()        
+        fast = {k: j.split(":")[1].strip() for j in  info_fast for k,v in aux_fast.items() if v in j}       
+        for key,value in fast.items():                        
+            aux += f"{key} - {value.upper()}\n" 
         self.rel["info_fast"] = aux
         print("\n\n")
         print(self.rel["title"])
