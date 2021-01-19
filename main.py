@@ -30,7 +30,8 @@ class main():
         self.rel = {
             "title": f"Relatório do Dispositivo {self.get_device()}",
         }
-        self.get_info_android()
+        #self.get_info_android()
+        self.logical_backup()
             
     def verify_system_host(self):
         so, hostname, release, version, arquitect = os.uname()
@@ -126,6 +127,11 @@ class main():
 
 
     def logical_backup(self):
+        check = self.execute_cmd(6)
+        if check:
+            "BACKUP executado com sucesso."
+    
+    def restore_logical_backup(self):
         pass
 
     def create_relatory(self):
@@ -181,6 +187,13 @@ class main():
             #for key,value in aux_full.items():
             #    full += run(["adb","-s",f"{self.get_device()}","shell",value])            
             return fast,full
+        elif options == 6:
+            print("Iniciando BACKUP......")
+            print("Pode demorar alguns minuto......")
+            bkp = run(["adb", "-s", f"{self.get_device()}", "backup", "-f", f"bkp_{datetime.now().strftime('%d_%m_%Y')}_.ab" ,"-apk","-system","-all","-shared" ])
+            print("BACKUP finalizado.")
+            print(f"O BACKUP está localizado na seguinte pasta {os.getcwd()} com o nome: bkp_{datetime.now().strftime('%d_%m_%Y')}_.ab")
+            return bkp
             
 
 droid = main()
