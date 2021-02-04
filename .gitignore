@@ -7,6 +7,7 @@
 .png
 .jpeg
 *.detail
+/Android
 
 # Compiled source #
 ###################

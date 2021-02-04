@@ -4,6 +4,7 @@ import os
 from subprocess import Popen, PIPE
 import sys
 #import psutil
+import re
 import time
 
 class main():
@@ -31,7 +32,8 @@ class main():
             "title": f"Relatório do Dispositivo {self.get_device()}",
         }
         #self.get_info_android()
-        self.logical_backup()
+        #self.logical_backup()
+        self.extract_data()
             
     def verify_system_host(self):
         so, hostname, release, version, arquitect = os.uname()
@@ -78,27 +80,31 @@ class main():
         self._device = str(devices[aux-1]).split('\t')[0]
         print("\nDevice selecionado é: ",self._device)
     
+    #Metodo que retorna qual dispositivo foi selecionado
     def get_device(self):
         return self._device
     
     def set_device(self, device):
         pass
-
+    #Inicia o servidor do ADB
     def adb_start(self):
         print("INICIANDO.........")
         self.execute_cmd(3)
         print("ADB SERVER INICIADO.")
 
+    #Mata o serviço do ADB
     def adb_kill(self):
         self.execute_cmd(4)
         print("ADB SERVER FECHADO.")
 
+    #Verifica se o ADB está instalado
     def verify_installed_adb(self):
-        check = self.execute_cmd(2)
+        check = self.execute_cmd(2)        
         if not check:
             print("Ferramenta ADB não instalada. Instale para continuar")
             sys.exit()
 
+    #Pega as principais informações do Android
     def get_info_android(self):
         aux = ""
         aux_fast = {                                
@@ -132,16 +138,17 @@ class main():
             "BACKUP executado com sucesso."
     
     def restore_logical_backup(self):
+        #check = self.execute_cmd(7)
         pass
+
+    def extract_data(self):
+        check = self.execute_cmd(8)
 
     def create_relatory(self):
         pass
 
     def export_relatory(self):
-        pass
-
-    def extract_data(self):
-        pass
+        pass    
 
     def execute_cmd(self,options):
 
@@ -150,28 +157,34 @@ class main():
                 out = Popen(cmd, stdout=PIPE)
                 while out.poll() == None:
                     pass                
-                output = out.communicate(timeout=15)[0].decode('UTF-8')                                
-                #print("OUTPUT :",output)
-                return output
-            except:
-                return False#Comando falhou
+                output, error = out.communicate(timeout=15)                
+                if error != None:
+                    return output.decode('UTF-8'), error.decode('UTF-8')
+                return output.decode('UTF-8'), error
+            except Exception as inst:
+                #print("insta args", inst.args)
+                return False, False #Comando falhou
             
         if options == 1:
-            return run(["adb","devices"])            
+            output, error = run(["adb","devices"])
+            return output
         
         elif options == 2:
-            return run(["adb"])
+            output, error = run(["adb"])            
+            return output
         
         elif options == 3:
-            return run(["adb","start-server"])
+            output, error = run(["adb","start-server"])
+            return output
         
         elif options == 4:
-            return run(["adb","kill-server"])
+            output, error = run(["adb","kill-server"])
+            return output
         
         elif options == 5:
             fast = ""
             full = ""
-            fast = run(["adb","-s",f"{self.get_device()}","shell","getprop"])
+            fast, error = run(["adb","-s",f"{self.get_device()}","shell","getprop"])
             aux_full = {
                 "Processos": "ps",
                 "Soquets": "netstat",
@@ -190,10 +203,26 @@ class main():
         elif options == 6:
             print("Iniciando BACKUP......")
             print("Pode demorar alguns minuto......")
-            bkp = run(["adb", "-s", f"{self.get_device()}", "backup", "-f", f"bkp_{datetime.now().strftime('%d_%m_%Y')}_.ab" ,"-apk","-system","-all","-shared" ])
+            bkp, error = run(["adb", "-s", f"{self.get_device()}", "backup", "-f", f"bkp_{datetime.now().strftime('%d_%m_%Y')}_.ab" ,"-apk","-system","-all","-shared" ])
             print("BACKUP finalizado.")
             print(f"O BACKUP está localizado na seguinte pasta {os.getcwd()} com o nome: bkp_{datetime.now().strftime('%d_%m_%Y')}_.ab")
             return bkp
+        
+        elif options == 7:
+            pass
+
+        elif options == 8:
+            print("Iniciando verificação das pastas e arquivos.")
+            files_folders,error = run(["adb", "-s", f"{self.get_device()}", "shell", "ls", "-l","-a", "/" ])
+            print(type(files_folders))
+            files_folders = files_folders.split("\n")         
+            get_names = [name for name in files_folders if re.findall(r'[-dlrwxt]{10}',name)]
+            #print("Lista: ", files_folders)
+            print("Names: ", get_names)
+            print("Erro: ", error)
+            #pega = re.findall(r'[-dlrwx]{10}',texto2)            
+            #print(pega)
+            sys.exit()
             
 
 droid = main()
